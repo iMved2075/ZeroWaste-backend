@@ -1,0 +1,1 @@
+export const DB_NAME = 'zero_waste_db';
