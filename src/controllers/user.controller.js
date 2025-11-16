@@ -1,7 +1,7 @@
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiError } from "../utils/ApiError.js"
 import { User } from "../models/user.models.js";
-import { uploadToCloudinary } from "../utils/cloudinary.js";
+import { uploadToCloudinary,deleteFromCloudinary } from "../utils/cloudinary.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import jwt from "jsonwebtoken";
 
@@ -21,7 +21,7 @@ const generateAccressAndRefreshTokens = async (userId) => {
     } catch (err) {
         throw new ApiError(500, "Something went wrong while generating access and refresh tokens");
     }
-}
+};
 
 const registerUser = asyncHandler(async (req, res) => {
 
@@ -36,6 +36,7 @@ const registerUser = asyncHandler(async (req, res) => {
     // return res
 
     const { email, username, password, role, phone } = req.body;
+    // console.log(req.body);
 
     if (
         [email, username, password, role, phone].some((field) => field?.trim() === "")
@@ -239,6 +240,10 @@ const changePassword = asyncHandler(async (req, res) => {
         throw new ApiError(400, "Old password and new password are required");
     }
 
+    if( oldPassword === newPassword ){
+        throw new ApiError(400, "New password must be different from old password");
+    }
+
     const user = await User.findById(req.user?._id);
 
     const isOldPasswordCorrect = await user.comparePassword(oldPassword);
@@ -299,6 +304,8 @@ const updateAvatar = asyncHandler(async (req, res) => {
 
     const avatarLocalPath = req.file?.path;
 
+    const oldImageUrl = req.user?.avatar;
+
     if (!avatarLocalPath) {
         throw new ApiError(400, "Avatar image is required");
     }
@@ -321,6 +328,16 @@ const updateAvatar = asyncHandler(async (req, res) => {
         }
     ).select("-password");
 
+    if (!user) {
+        throw new ApiError(500, "Something went wrong while updating avatar");
+    }
+
+    // delete old avatar from cloudinary
+
+    if (oldImageUrl) {
+        await deleteFromCloudinary(oldImageUrl);
+    }
+
     return res
         .status(200)
         .json(new ApiResponse(200, user, "Avatar updated successfully"));
@@ -332,6 +349,8 @@ const updateCoverImage = asyncHandler(async (req, res) => {
     // return updated user
 
     const coverImageLocalPath = req.file?.path;
+    const oldImageUrl = req.user?.coverImage;
+
     if (!coverImageLocalPath) {
         throw new ApiError(400, "Cover image is required");
     }
@@ -354,6 +373,14 @@ const updateCoverImage = asyncHandler(async (req, res) => {
         }
     ).select("-password");
 
+    if (!user) {
+        throw new ApiError(500, "Something went wrong while updating cover image");
+    }
+
+    if (oldImageUrl) {
+        await deleteFromCloudinary(oldImageUrl);
+    }
+
     return res
         .status(200)
         .json(new ApiResponse(200, user, "Cover image updated successfully"));
@@ -361,13 +388,22 @@ const updateCoverImage = asyncHandler(async (req, res) => {
 
 const deleteUser = asyncHandler(async (req, res) => {
     // delete user by id from req.user
+
+    const avatarUrl = req.user?.avatar;
+    const coverImageUrl = req.user?.coverImage;
+
+    if( avatarUrl ){
+        await deleteFromCloudinary(avatarUrl);
+    }
+    if( coverImageUrl ){
+        await deleteFromCloudinary(coverImageUrl);
+    }
+    
     await User.findByIdAndDelete(req.user._id);
     return res
         .status(200)
         .json(new ApiResponse(200, {}, "User deleted successfully"));
 });
-
-
 
 
 export { registerUser, loginUser, logoutUser, refreshAccessToken, changePassword, updateUserDetails, currentUser, updateAvatar, updateCoverImage, deleteUser };

@@ -28,4 +28,17 @@ const uploadToCloudinary = async (localFilePath) => {
     } 
 }
 
-export { uploadToCloudinary };
+const deleteFromCloudinary = async (imageUrl) => {
+    try {
+        if (!imageUrl) return null;
+        const publicId = imageUrl.split('/').pop().split('.')[0];
+        const result = await cloudinary.uploader.destroy(`zeroWaste/${publicId}`);
+        console.log("File is deleted from cloudinary", result);
+        return result;
+    } catch (error) {
+        console.error("Error while deleting from cloudinary", error);
+        return null;
+    }
+}
+
+export { uploadToCloudinary, deleteFromCloudinary };
