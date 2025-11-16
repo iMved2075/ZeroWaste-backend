@@ -31,6 +31,10 @@ const userSchema = new mongoose.Schema({
         required: [true, 'Password is required'],
         minlength: [6, 'Password must be at least 6 characters long']
     },
+    listings: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Listing'
+    }],
     role: {
         type: String,
         enum: ['donor', 'reciever'],
@@ -84,6 +88,7 @@ userSchema.methods.generateRefreshToken = function () {
         }
     )
 }
+
 
 
 export const User = mongoose.model('User', userSchema);
