@@ -4,6 +4,7 @@ import { User } from "../models/user.models.js";
 import { uploadToCloudinary,deleteFromCloudinary } from "../utils/cloudinary.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import jwt from "jsonwebtoken";
+import { Listing } from "../models/listing.models.js";
 
 
 const generateAccressAndRefreshTokens = async (userId) => {
@@ -45,11 +46,11 @@ const registerUser = asyncHandler(async (req, res) => {
     }
 
     const existingUser = await User.findOne({
-        $or: [{ email }, { username }]
+        $or: [{ email }, { username },{ phone }]
     });
 
     if (existingUser) {
-        throw new ApiError(409, "User with given email or username already exists");
+        throw new ApiError(409, "User with given email, username, or phone already exists");
     }
     // console.log(req.files)
 
@@ -389,6 +390,8 @@ const updateCoverImage = asyncHandler(async (req, res) => {
 const deleteUser = asyncHandler(async (req, res) => {
     // delete user by id from req.user
 
+    const listings = await Listing.find({ donorId: req.user._id });
+
     const avatarUrl = req.user?.avatar;
     const coverImageUrl = req.user?.coverImage;
 
@@ -397,6 +400,14 @@ const deleteUser = asyncHandler(async (req, res) => {
     }
     if( coverImageUrl ){
         await deleteFromCloudinary(coverImageUrl);
+    }
+
+    for (const listing of listings){
+        const foodPhotos = listing.foodPhoto;
+        for(const photoUrl of foodPhotos){
+            await deleteFromCloudinary(photoUrl);
+        }
+        await Listing.findByIdAndDelete(listing._id);
     }
     
     await User.findByIdAndDelete(req.user._id);

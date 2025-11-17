@@ -37,8 +37,8 @@ const userSchema = new mongoose.Schema({
     }],
     role: {
         type: String,
-        enum: ['donor', 'reciever'],
-        default: 'reciever',
+        enum: ['donor', 'receiver'],
+        default: 'receiver',
         required: true
     },
     phone: {

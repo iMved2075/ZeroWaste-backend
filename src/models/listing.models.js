@@ -16,12 +16,12 @@ const listingSchema = new mongoose.Schema({
         required: true,
         min: [1, 'Quantity must be at least 1']
     },
-    photoUrl: {
+    foodPhoto: [{
         type: String,
         required: true,
         trim: true
-    },
-    donotId: {
+    }],
+    donorId: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User',
         required: true
