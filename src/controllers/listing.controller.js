@@ -33,14 +33,21 @@ const createNewListing = asyncHandler(async (req, res) => {
     }
 
     const donorId = req.user?._id;
-    const foodPhotoLocalPath = req.file?.path;
-    if(!foodPhotoLocalPath){
+    const foodPhotosfiles = req.files;
+
+    if(!foodPhotosfiles || foodPhotosfiles.length === 0){
         throw new ApiError(400, "Food photo is required");
     }
 
-    const foodPhoto = await uploadToCloudinary(foodPhotoLocalPath, "food_photos");
+    const folderName = `food_photos/${donorId}${Date.now()}`;
+    const foodPhotos = [];
 
-    if(!foodPhoto){
+    for(const file of foodPhotosfiles){
+        const uploadedPhoto =  await uploadToCloudinary(file.path, folderName);
+        foodPhotos.push(uploadedPhoto.url);
+    }
+
+    if(foodPhotos.length === 0){
         throw new ApiError(500, "Something went wrong while uploading food photo");
     }
 
@@ -48,7 +55,7 @@ const createNewListing = asyncHandler(async (req, res) => {
         title,
         description,
         quantity,
-        foodPhoto: foodPhoto?.url || "",
+        foodPhotos: foodPhotos || [],
         donorId,
         pickupAddress,
         expiryDate,
@@ -67,7 +74,7 @@ const createNewListing = asyncHandler(async (req, res) => {
     
     return res
         .status(201)
-        .json(new ApiResponse(200, listing, "Listing created successfully"));
+        .json(new ApiResponse(201, listing, "Listing created successfully"));
 });
 
 

@@ -5,5 +5,5 @@ import { verifyJWT } from "../middlewares/auth.middleware.js";
 
 const router = Router();
 
-router.route("/createListing").post(verifyJWT, upload.single("foodPhoto"), createNewListing);
+router.route("/createListing").post(verifyJWT, upload.array("foodPhotos", 5), createNewListing);
 export default router;

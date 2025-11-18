@@ -16,7 +16,7 @@ const listingSchema = new mongoose.Schema({
         required: true,
         min: [1, 'Quantity must be at least 1']
     },
-    foodPhoto: [{
+    foodPhotos: [{
         type: String,
         required: true,
         trim: true

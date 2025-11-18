@@ -403,7 +403,7 @@ const deleteUser = asyncHandler(async (req, res) => {
     }
 
     for (const listing of listings){
-        const foodPhotos = listing.foodPhoto;
+        const foodPhotos = listing.foodPhotos;
         for(const photoUrl of foodPhotos){
             await deleteFromCloudinary(photoUrl);
         }
